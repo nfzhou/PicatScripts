@@ -1,4 +1,4 @@
-This repository contains several scripts I wrote for my work.
+This repository contains several scripts I wrote in Picat for my work.
 
 extract_code.pi:
  This Picat script extracts code snippets enclosed by begin{verbatim} and end{verbatim} in latex files.
