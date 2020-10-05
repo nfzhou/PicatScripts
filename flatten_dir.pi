@@ -1,0 +1,22 @@
+% This Picat script recursively copies all the plain files under the current directory to the current directory.
+% by Neng-Fa Zhou, 2015
+
+import os.
+
+main =>
+    Wd = pwd(),
+    flatten_dir(Wd, Wd).
+
+flatten_dir(Wd, Dir) =>
+    Items = listdir(Dir),
+    foreach (Item in Items, Item !== ".", Item !== "..")
+       FullName = full_path(Dir, Item),
+       (directory(FullName) ->
+           flatten_dir(Wd, FullName)
+        ;
+           cp(FullName, full_path(Wd, Item))
+        )
+    end.
+         
+full_path(Dir,Name) =
+    Dir ++ [separator()] ++ Name.

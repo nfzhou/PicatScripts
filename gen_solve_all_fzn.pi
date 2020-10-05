@@ -1,0 +1,14 @@
+% This Picat script generates a command line for executing each FlatZinc file under the current directory.
+% by Neng-Fa Zhou, 2015
+
+import os.
+
+main =>
+    gen(".").
+
+gen(Dir) =>
+    Files = listdir(Dir),
+    foreach (File in Files, append(_,".fzn",File))
+        printf("echo solving %s\n",File),
+        printf("time timeout -k 2400 2400 fzn_picat_sat -log %s\n",File)
+    end.

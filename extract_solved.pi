@@ -1,0 +1,89 @@
+% This Picat script processes a log file of a MiniZinc run by PicatSAT, and classifies instances into Solved, NotSolved, and NotCompiled.
+% The log of each instance begins with a line "solving Name". If compiled successfully, the log contains a line "% start SAT solving".
+% If solved, the log contains at least one line of the form "var = value".
+% by Neng-Fa Zhou, 2016
+
+main([File]) =>
+    FD = open(File),             
+    FD.read_line() = Line,
+    separate(FD,Line,Solved,Unsolved,Uncompiled),
+    printf("SOLVED = %d:\n",Solved.length),
+    foreach(P in Solved)
+        printf("%s\n",P)
+    end,
+    println("=================================="),        
+    printf("NOT SOLVED=%d:\n",Unsolved.length),
+    println("=================================="),        
+    foreach(P in Unsolved)
+        printf("%s\n",P)
+    end,
+    println("=================================="),    
+    printf("NOT COMPILED=%d:\n",Uncompiled.length),
+    println("=================================="),
+    foreach(P in Uncompiled)
+        printf("%s\n",P)
+    end.
+
+separate(_,end_of_file,Solved,Unsolved,Uncompiled) => Solved = [], Unsolved = [], Uncompiled = [].
+separate(FD,L,Solved,Unsolved,Uncompiled),
+    append(_,"solving ",Name,L)
+=>
+    FD.read_line() = Line,    
+    solved_or_not(FD,Line,Name,Solved,Unsolved,Uncompiled,CompiledFlag).
+separate(FD,_L,Solved,Unsolved,Uncompiled) =>
+    FD.read_line() = Line,    
+    separate(FD,Line,Solved,Unsolved,Uncompiled).
+
+solved_or_not(_FD,end_of_file,Name,Solved,Unsolved,Uncompiled,CompiledFlag) =>
+    Solved = [], Unsolved = [Name],
+    (var(CompiledFlag) -> Uncompiled = [Name]; Uncompiled = []). 
+solved_or_not(FD,L,Name,Solved,Unsolved,Uncompiled,CompiledFlag),
+    append(_,"solving ",_,L)
+=>
+    Unsolved = [Name|UnsolvedR],
+    (var(CompiledFlag) -> Uncompiled = [Name|UncompiledR]; Uncompiled = UncompiledR),
+    separate(FD,L,Solved,UnsolvedR,UncompiledR).
+solved_or_not(FD,L,Name,Solved,Unsolved,Uncompiled,CompiledFlag),
+    (append(_," = ",_,L); append(_,"UNSATI",_,L))
+=>
+    (append("s UNSAT",_,L) ->
+        printf("UNSAT %s\n",Name)
+    ;
+        true
+    ),
+    Solved = [Name|SolvedR],
+    FD.read_line() = Line,     
+    skip_until_solving(FD,Line,NextLine),
+    separate(FD,NextLine,SolvedR,Unsolved,Uncompiled).
+solved_or_not(FD,L,Name,Solved,Unsolved,Uncompiled,CompiledFlag),
+    append("s ",_,L)
+=>
+    (append("s UNSAT",_,L) ->
+        printf("UNSAT %s\n",Name)
+    ;
+        true
+    ),
+    Solved = [Name|SolvedR],
+    FD.read_line() = Line,     
+    skip_until_solving(FD,Line,NextLine),
+    separate(FD,NextLine,SolvedR,Unsolved,Uncompiled).
+solved_or_not(FD,L,Name,Solved,Unsolved,Uncompiled,CompiledFlag),
+    append("o ",_,L)
+=>
+    Solved = [Name|SolvedR],
+    FD.read_line() = Line,     
+    skip_until_solving(FD,Line,NextLine),
+    separate(FD,NextLine,SolvedR,Unsolved,Uncompiled).
+solved_or_not(FD,L,Name,Solved,Unsolved,Uncompiled,CompiledFlag) =>
+    (append("% start SAT",_,L) -> CompiledFlag = 1; true),
+    FD.read_line() = Line,     
+    solved_or_not(FD,Line,Name,Solved,Unsolved,Uncompiled,CompiledFlag).
+
+skip_until_solving(_FD,end_of_file,NextLine) => NextLine = end_of_file.
+skip_until_solving(_FD,L,NextLine),
+    append(_,"solving ",_,L)
+ => 
+    NextLine = L.
+skip_until_solving(FD,_,NextLine) =>
+    FD.read_line() = L,
+    skip_until_solving(FD,L,NextLine).

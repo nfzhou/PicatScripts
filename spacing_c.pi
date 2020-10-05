@@ -1,0 +1,211 @@
+/****************************************************************************
+    spacing_c.pi, Neng-Fa Zhou, 2020
+
+    This program transforms C program files to enforce spacing rules, such as:
+
+    * Each comma is always followed by a space.
+    * Each binary operator has spaces before and after it.
+    * There is a space between the close parenthesis (')') and the curly brace ('{').
+
+	NOTE: indentation spaces are removed, and the resulting files need to be
+	      indented with a tool such as Emacs.
+
+    To process a C program file, say "source.c", and have the transformed file saved
+    in file "target.c", use the following command:
+
+    picat spacing_c source.c target.c
+
+    To process all ".c" and ".h" files in the current directory, and save all
+    the transformed files in the "tmp" directory, use the command:
+
+    picat spacing_c
+****************************************************************************/
+
+import util, os.
+
+main =>
+    Fs = listdir("."),
+    foreach (F in Fs, (append(_,".c",F); append(_,".h",F)))
+        main([F, "tmp/"++F])
+    end.
+
+main([InFile]) =>
+    InStream = open(InFile),
+    OutStream = stdout,
+    Line = InStream.my_read_line(),
+    proc_line(InStream,OutStream,Line,'^').
+    
+
+main([InFile,OutFile]) =>
+    printf("processing %s\n",InFile),
+    InStream = open(InFile),
+    OutStream = open(OutFile,write),
+    Line = InStream.my_read_line(),
+    proc_line(InStream,OutStream,Line,'^').
+
+proc_line(InStream,OutStream,end_of_file,_PreChar) => close(InStream), close(OutStream).
+proc_line(InStream,OutStream,[],_PreChar) =>
+    OutStream.nl(),
+    Line = InStream.my_read_line(),
+    proc_line(InStream,OutStream,Line,'^').
+proc_line(InStream,OutStream,Line@['#',i,n,c,l,u,d,e|_],_PreChar) =>
+    OutStream.print(Line),
+    proc_line(InStream,OutStream,[],' ').
+proc_line(InStream,OutStream,['/','*'|Line],PreChar) =>
+    (PreChar == '^' -> true; OutStream.print(' ')),
+    OutStream.print("/*"), 
+    proc_comment(InStream,OutStream,Line).
+proc_line(InStream,OutStream,['\''|Line],_PreChar) =>
+    OutStream.print("'"),     
+    proc_char(InStream,OutStream,Line).
+proc_line(InStream,OutStream,['"'|Line],_PreChar) =>
+    OutStream.print('"'),     
+    proc_string(InStream,OutStream,Line).
+proc_line(InStream,OutStream,[')','{'|Line],_PreChar) =>   
+    OutStream.print(')'),
+    OutStream.print(' '),
+    OutStream.print('{'),
+    proc_line(InStream,OutStream,Line,'{').
+proc_line(InStream,OutStream,['=','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"==",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['+','+'|Line],PreChar) =>
+    OutStream.print("++"),
+    proc_line(InStream,OutStream,Line,PreChar).
+proc_line(InStream,OutStream,['+','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"+=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['-','-'|Line],PreChar) =>
+    OutStream.print("--"),
+    proc_line(InStream,OutStream,Line,PreChar).
+proc_line(InStream,OutStream,['-','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"-=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['*','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"*=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['/','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"/=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['%','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"%=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['^','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"^=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['&','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"&=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['|','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"|=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['>','>','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,">>=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['<','<','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"<<=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['!','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"!=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['<','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"<=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'=').
+proc_line(InStream,OutStream,['>','=',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,">=",Char),
+    proc_line(InStream,OutStream,[Char|Line],'>').
+proc_line(InStream,OutStream,['>','>',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,">>",Char),
+    proc_line(InStream,OutStream,[Char|Line],'>').
+proc_line(InStream,OutStream,['-','>'|Line],PreChar) =>
+    OutStream.print("->"),
+    proc_line(InStream,OutStream,Line,'>').
+proc_line(InStream,OutStream,['>',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,">",Char),
+    proc_line(InStream,OutStream,[Char|Line],'>').
+proc_line(InStream,OutStream,['<','<',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"<<",Char),
+    proc_line(InStream,OutStream,[Char|Line],'<').
+proc_line(InStream,OutStream,['<',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"<",Char),
+    proc_line(InStream,OutStream,[Char|Line],'<').
+proc_line(InStream,OutStream,['&','&',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"&&",Char),
+    proc_line(InStream,OutStream,[Char|Line],'&').
+proc_line(InStream,OutStream,['|','|',Char|Line],PreChar) =>
+    output_bin_op(OutStream,PreChar,"||",Char),
+    proc_line(InStream,OutStream,[Char|Line],'|').
+proc_line(InStream,OutStream,[',',Char|Line],_PreChar) =>
+    output_bin_op(OutStream,' ',",",Char),
+    proc_line(InStream,OutStream,[Char|Line],',').
+proc_line(InStream,OutStream,[';',Char|Line],_PreChar) =>    
+    (Char == '}' ->
+        output_bin_op(OutStream,' ',";",' ')
+    ;
+        output_bin_op(OutStream,' ',";",Char)
+    ),
+    proc_line(InStream,OutStream,[Char|Line],';').
+proc_line(InStream,OutStream,['/','/'|Line],PreChar) =>
+    (PreChar == '^' -> true; OutStream.print(' ')),
+    OutStream.print("//"),
+    OutStream.print(Line),
+    proc_line(InStream,OutStream,[],' ').
+proc_line(InStream,OutStream,[' '|Line],PreChar) =>
+    (PreChar == ' ' -> true; OutStream.print(' ')),
+    proc_line(InStream,OutStream,Line,' ').
+proc_line(InStream,OutStream,['\t'|Line],PreChar) =>
+    (PreChar == ' ' -> true; OutStream.print(' ')),
+    proc_line(InStream,OutStream,Line,' ').
+proc_line(InStream,OutStream,[Char|Line],_PreChar) =>
+    OutStream.print(Char),
+    proc_line(InStream,OutStream,Line,Char).
+
+output_bin_op(OutStream,PreChar,Op,PostChar) =>
+    (PreChar == ' ' -> true; OutStream.print(' ')),
+    OutStream.print(Op),
+    (PostChar == ' ' -> true; OutStream.print(' ')).
+    
+proc_comment(InStream,OutStream,[]) =>
+    OutStream.nl(),
+    Line = InStream.read_line(),
+    proc_comment(InStream,OutStream,Line).
+proc_comment(InStream,OutStream,['*','/'|_]) =>
+    OutStream.println("*/"),
+    Line = InStream.my_read_line(),
+    proc_line(InStream,OutStream,Line,'^').
+proc_comment(InStream,OutStream,[Char|Line]) =>
+    OutStream.print(Char),
+    proc_comment(InStream,OutStream,Line).
+
+proc_char(InStream,OutStream,['\''|Line]) =>
+    OutStream.print("'"),
+    proc_line(InStream,OutStream,Line,'\'').    
+proc_char(InStream,OutStream,['\\',Char|Line]) =>
+    OutStream.print("\\"),
+    OutStream.print(Char),
+    proc_char(InStream,OutStream,Line).
+proc_char(InStream,OutStream,[Char|Line]) =>
+    OutStream.print(Char),
+    proc_char(InStream,OutStream,Line).
+    
+proc_string(InStream,OutStream,[]) =>
+    OutStream.nl(),
+    Line = InStream.read_line(),
+    proc_string(InStream,OutStream,Line).
+proc_string(InStream,OutStream,['\\',Char|Line]) =>
+    OutStream.print("\\"),
+    OutStream.print(Char),
+    proc_string(InStream,OutStream,Line).
+proc_string(InStream,OutStream,['"'|Line]) =>
+    OutStream.print('"'),
+    proc_line(InStream,OutStream,Line,'"').
+proc_string(InStream,OutStream,[Char|Line]) =>
+    OutStream.print(Char),
+    proc_string(InStream,OutStream,Line).
+
+my_read_line(InStream) = Line =>
+    Tmp = InStream.read_line(),
+    (Tmp == end_of_file -> Line = Tmp; Line = rstrip(Tmp)).

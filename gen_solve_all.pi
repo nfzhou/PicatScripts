@@ -1,0 +1,20 @@
+% This Picat script generates a command line for executing each Picat file under the current directory.
+% by Neng-Fa Zhou, 2015
+
+import os.
+
+main =>
+    gen(".").
+
+gen(Dir) =>
+    Files = listdir(Dir),
+    foreach (File in Files, File != ".", File != "..")
+        if directory(File) then
+             gen(Dir ++ [separator()] ++ File)
+        elseif append(_,".pi",File) then
+            printf("echo solving %s/%s\n",Dir,File),
+            printf("timeout -k 50 50 picat %s/%s\n",Dir,File)
+        end
+    end.
+
+        

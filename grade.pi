@@ -1,0 +1,47 @@
+% This Picat script processes test scores and produces final grades.
+% Neng-Fa Zhou, 2015.
+
+import util.
+
+main =>
+    proc_stream(stdin).
+    
+main([File]) =>
+    S = open(File),
+    proc_stream(S).
+
+proc_stream(S) =>
+    Records = read_lines(S,S.read_line()),
+    S.close(),
+    printf("%n          Programming Languages and Compilers %n%n"),
+    foreach(Record in Records) output(Record) end.
+
+read_lines(_S,end_of_file) = [].
+read_lines(S,[]) = 
+    read_lines(S,S.read_line()).
+read_lines(S,Line) = [Record|Records] =>
+    Record = split(Line),
+    Records = read_lines(S,S.read_line()).
+
+output(Record),
+    append([ID,Name,First],_Optional,[Proj,Mid,Final],Record) 
+=>
+    to_number(Final) = Gf,
+    to_number(Mid) = Gm,
+    to_number(Proj) = Gp,
+    Grade = ceiling(Gm*0.3+Gf*0.4+Gp),
+    symbolicGrade(Grade,SGrade),
+    printf("%10s %10s %5s %5s (%w)%n",Name,First,Mid,Final,SGrade),
+    printf("-------------------------------------------------------%n").
+output(Record) => throw($wrong_record(Record)).
+
+symbolicGrade(Score,Grade), Score >= 95 => Grade = 'A+'.
+symbolicGrade(Score,Grade), Score >= 90 => Grade = 'A'.
+symbolicGrade(Score,Grade), Score >= 85 => Grade = 'A-'.
+symbolicGrade(Score,Grade), Score >= 80 => Grade = 'B+'.
+symbolicGrade(Score,Grade), Score >= 85 => Grade = 'B'.
+symbolicGrade(Score,Grade), Score >= 80 => Grade = 'B-'.
+symbolicGrade(Score,Grade), Score >= 75 => Grade = 'C+'.
+symbolicGrade(Score,Grade), Score >= 70 => Grade = 'C'.
+symbolicGrade(Score,Grade), Score >= 65 => Grade = 'C-'.
+symbolicGrade(_Score,Grade) => Grade = 'D'.
