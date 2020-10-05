@@ -3,6 +3,9 @@ This repository contains several scripts I wrote for my work.
 extract_code.pi:
  This Picat script extracts code snippets enclosed by begin{verbatim} and end{verbatim} in latex files.
 
+extract_solved.pi:
+ This Picat script processes a log file of a MiniZinc run by PicatSAT, and classifies instances into Solved, NotSolved, and NotCompiled.
+
 flatten_dir.pi:
  This Picat script recursively copies all the plain files under the current directory to the current directory.
 
