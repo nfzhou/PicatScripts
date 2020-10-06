@@ -39,9 +39,8 @@ symbolicGrade(Score,Grade), Score >= 95 => Grade = 'A+'.
 symbolicGrade(Score,Grade), Score >= 90 => Grade = 'A'.
 symbolicGrade(Score,Grade), Score >= 85 => Grade = 'A-'.
 symbolicGrade(Score,Grade), Score >= 80 => Grade = 'B+'.
-symbolicGrade(Score,Grade), Score >= 85 => Grade = 'B'.
-symbolicGrade(Score,Grade), Score >= 80 => Grade = 'B-'.
-symbolicGrade(Score,Grade), Score >= 75 => Grade = 'C+'.
-symbolicGrade(Score,Grade), Score >= 70 => Grade = 'C'.
-symbolicGrade(Score,Grade), Score >= 65 => Grade = 'C-'.
-symbolicGrade(_Score,Grade) => Grade = 'D'.
+symbolicGrade(Score,Grade), Score >= 75 => Grade = 'B'.
+symbolicGrade(Score,Grade), Score >= 70 => Grade = 'B-'.
+symbolicGrade(Score,Grade), Score >= 65 => Grade = 'C+'.
+symbolicGrade(Score,Grade), Score >= 60 => Grade = 'C'.
+symbolicGrade(_Score,Grade) => Grade = 'F'.
