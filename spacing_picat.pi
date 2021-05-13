@@ -72,7 +72,7 @@ proc_line(InStream,OutStream,['%'|Line],PreChar) =>
     OutStream.print("%"),
     (Line == [] -> true; OutStream.print(Line)),
     proc_line(InStream,OutStream,[],' ').
-proc_line(InStream,OutStream,[')',','|Line],_PreChar) =>   
+proc_line(InStream,OutStream,[')',','|Line],_PreChar), Line = [Char|_], Char !== ' ' =>   
     OutStream.print(')'),
     OutStream.print(','),
     OutStream.print(' '),
