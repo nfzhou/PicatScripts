@@ -3,7 +3,8 @@
 
     This program transforms Picat program files to enforce the spacing rule:
 
-    * Each binary operator has spaces before and after it.
+    * Each binary operator has one space before and one space after it.
+    * Each comma is always followed by a space.
 
     To process a  program file, say "source.pi", and have the transformed file saved
     in file "target.pi", use the following command:
@@ -77,11 +78,27 @@ proc_line(InStream,OutStream,[')',','|Line],_PreChar), Line = [Char|_], Char !==
     OutStream.print(','),
     OutStream.print(' '),
     proc_line(InStream,OutStream,Line,' ').
+proc_line(InStream,OutStream,[','|Line], _PreChar),
+    Line = [Char|R], Char !== ' '
+=>
+    OutStream.print(','),
+    OutStream.print(' '),
+    proc_line(InStream,OutStream,Line,' ').
+/*
 proc_line(InStream,OutStream,[',','('|Line],_PreChar) =>   
     OutStream.print(','),
     OutStream.print(' '),
     OutStream.print('('),
     proc_line(InStream,OutStream,Line,'(').
+proc_line(InStream,OutStream,[','|Line], _PreChar),
+    Line = [Char|R], Char !== ' ',
+    append(Str,['('|_],Line),
+    not member(',',Str), not member('''', Str)
+=>
+    OutStream.print(','),
+    OutStream.print(' '),
+    proc_line(InStream,OutStream,Line,' ').
+*/
 proc_line(InStream,OutStream,[':','=',Char|Line],PreChar) =>
     output_bin_op(OutStream,PreChar,":=",Char),
     proc_line(InStream,OutStream,[Char|Line],' ').
