@@ -78,13 +78,14 @@ proc_line(InStream, OutStream, [')', ','|Line], _PreChar), Line = [Char|_], Char
     OutStream.print(','),
     OutStream.print(' '),
     proc_line(InStream, OutStream, Line, ' ').
+/*
 proc_line(InStream, OutStream, [','|Line], _PreChar),
     Line = [Char|R], Char !== ' '
  =>
     OutStream.print(','),
     OutStream.print(' '),
     proc_line(InStream, OutStream, Line, ' ').
-/*
+*/
 proc_line(InStream,OutStream,[',','('|Line],_PreChar) =>   
     OutStream.print(','),
     OutStream.print(' '),
@@ -98,7 +99,6 @@ proc_line(InStream,OutStream,[','|Line], _PreChar),
     OutStream.print(','),
     OutStream.print(' '),
     proc_line(InStream,OutStream,Line,' ').
-*/
 proc_line(InStream, OutStream, [':', '=', Char|Line], PreChar) =>
     output_bin_op(OutStream, PreChar, ":=", Char),
     proc_line(InStream, OutStream, [Char|Line], ' ').
