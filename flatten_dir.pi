@@ -18,5 +18,5 @@ flatten_dir(Wd, Dir) =>
         )
     end.
          
-full_path(Dir,Name) =
+full_path(Dir, Name) =
     Dir ++ [separator()] ++ Name.

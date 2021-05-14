@@ -1,0 +1,70 @@
+import util.
+
+main([File]) =>
+    Ls = read_file_lines(File),
+    skip_until_begin_document(Ls).
+
+skip_until_begin_document([L|Ls]),
+    append("\\begin{document}", _, L)
+ =>
+    extract_text(Ls).
+skip_until_begin_document([_L|Ls]) =>
+    skip_until_begin_document(Ls).
+
+extract_text([]) => true.
+extract_text([L|Ls]), append("\\begin{verbatim}", _, L) =>
+    skip_until_end(Ls, "verbatim").
+extract_text([L|Ls]), append("\\begin{figure}", _, L) =>
+    skip_until_end(Ls, "figure").
+extract_text([L|Ls]), append("\\begin{table}", _, L) =>
+    skip_until_end(Ls, "table").
+extract_text([L|Ls]), append("\\begin{tabbing}", _, L) =>
+    skip_until_end(Ls, "tabbing").
+extract_text([L|Ls]) =>
+    extract_text_line(L), nl,
+    extract_text(Ls).
+
+extract_text_line([]) => true.
+extract_text_line(['\\', s, e, c, t, i, o, n|L]) =>
+    extract_text_line(L).
+extract_text_line(['{'|L]) =>
+    extract_text_line(L).
+extract_text_line(['}'|L]) =>
+    extract_text_line(L).
+extract_text_line(['$'|L]),
+    append(_, ['$'|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', v, e, r, b, C|L]),
+    append(_, [C|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', t, e, x, t, t, t, '{'|L]),
+    append(_, ['}'|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', u, r, l, '{'|L]),
+    append(_, ['}'|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', c, i, t, e, '{'|L]),
+    append(_, ['}'|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', r, e, f, '{'|L]),
+    append(_, ['}'|R], L)
+ =>     
+    extract_text_line(R).
+extract_text_line(['\\', t, e, x, t, i, t, '{'|L]),
+    append(W, ['}'|R], L)
+ =>
+    extract_text_line(W),
+    extract_text_line(R).
+extract_text_line([C|L]) =>
+    print(C),
+    extract_text_line(L).
+
+skip_until_end([L|Ls], W), append("\\end{", W, _, L) =>
+    extract_text(Ls).
+skip_until_end([_L|Ls], W) =>
+    skip_until_end(Ls, W).

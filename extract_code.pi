@@ -5,27 +5,27 @@ import os.
 
 main =>
     Fs = listdir("."),
-    foreach (F in Fs, append(_,".tex",F))
+    foreach (F in Fs, append(_, ".tex", F))
         printf("\n \n reading ... %s\n", F),
         IS = open(F),
         L = read_line(IS),
-        extract_code(IS,L),
+        extract_code(IS, L),
         close(IS)
     end.
 
-extract_code(_IS,end_of_file) => true.
-extract_code(IS,L), append(_,"{verbatim}",_, L) =>
+extract_code(_IS, end_of_file) => true.
+extract_code(IS, L), append(_, "{verbatim}", _, L) =>
     NL = read_line(IS),
-    read_until_end_verb(IS,NL).
-extract_code(IS,_L) =>
+    read_until_end_verb(IS, NL).
+extract_code(IS, _L) =>
     NL = read_line(IS),
-    extract_code(IS,NL).
+    extract_code(IS, NL).
 
-read_until_end_verb(IS,L), append(_,"{verbatim}",_,L) =>
+read_until_end_verb(IS, L), append(_, "{verbatim}", _, L) =>
     NL = read_line(IS),
-    extract_code(IS,NL).
-read_until_end_verb(IS,L) =>
-    printf("%s\n",L),
+    extract_code(IS, NL).
+read_until_end_verb(IS, L) =>
+    printf("%s\n", L),
     NL = read_line(IS),
-    read_until_end_verb(IS,NL).
+    read_until_end_verb(IS, NL).
     
